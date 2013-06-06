@@ -168,8 +168,11 @@ func (j *Json) Int() (int, error) {
 	return -1, errors.New("type assertion to float64 failed")
 }
 
-// Int type asserts to `float64` then converts to `int64`
+// Int type asserts to `float64` then converts to `int64` if not already `int64`
 func (j *Json) Int64() (int64, error) {
+	if f, ok := (j.data).(int64); ok {
+		return f, nil;
+	}
 	if f, ok := (j.data).(float64); ok {
 		return int64(f), nil
 	}
@@ -317,6 +320,26 @@ func (j *Json) MustFloat64(args ...float64) float64 {
 	}
 
 	i, err := j.Float64()
+	if err == nil {
+		return i
+	}
+
+	return def
+}
+
+func (j *Json) MustInt64(args ...int64) int64 {
+	var def int64
+
+	switch len(args) {
+	case 0:
+		break
+	case 1:
+		def = args[0]
+	default:
+		log.Panicf("MustInt64() received too many arguments %d", len(args))
+	}
+
+	i, err := j.Int64()
 	if err == nil {
 		return i
 	}
