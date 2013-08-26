@@ -9,3 +9,7 @@ func FromInterface(i interface{}) *Json {
 func (j Json) IsNil() bool {
 	return j.data == nil
 }
+
+func (j Json) Data() interface{} {
+	return j.data
+}
