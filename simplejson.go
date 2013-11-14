@@ -8,7 +8,7 @@ import (
 
 // returns the current implementation version
 func Version() string {
-	return "0.4.2"
+	return "0.5.0-alpha"
 }
 
 type Json struct {
@@ -29,11 +29,6 @@ func NewJson(body []byte) (*Json, error) {
 // Encode returns its marshaled data as `[]byte`
 func (j *Json) Encode() ([]byte, error) {
 	return j.MarshalJSON()
-}
-
-// Implements the json.Unmarshaler interface.
-func (j *Json) UnmarshalJSON(p []byte) error {
-	return json.Unmarshal(p, &j.data)
 }
 
 // Implements the json.Marshaler interface.
@@ -151,35 +146,6 @@ func (j *Json) String() (string, error) {
 	return "", errors.New("type assertion to string failed")
 }
 
-// Float64 type asserts to `float64`
-func (j *Json) Float64() (float64, error) {
-	if i, ok := (j.data).(float64); ok {
-		return i, nil
-	}
-	return -1, errors.New("type assertion to float64 failed")
-}
-
-// Int type asserts to `float64` then converts to `int`
-func (j *Json) Int() (int, error) {
-	if f, ok := (j.data).(float64); ok {
-		return int(f), nil
-	}
-
-	return -1, errors.New("type assertion to float64 failed")
-}
-
-// Int type asserts to `float64` then converts to `int64` if not already `int64`
-func (j *Json) Int64() (int64, error) {
-	if f, ok := (j.data).(int64); ok {
-		return f, nil;
-	}
-	if f, ok := (j.data).(float64); ok {
-		return int64(f), nil
-	}
-
-	return -1, errors.New("type assertion to float64 failed")
-}
-
 // Bytes type asserts to `[]byte`
 func (j *Json) Bytes() ([]byte, error) {
 	if s, ok := (j.data).(string); ok {
@@ -213,9 +179,9 @@ func (j *Json) StringArray() ([]string, error) {
 //		}
 func (j *Json) MustArray(args ...[]interface{}) []interface{} {
 	var def []interface{}
+
 	switch len(args) {
 	case 0:
-		break
 	case 1:
 		def = args[0]
 	default:
@@ -238,9 +204,9 @@ func (j *Json) MustArray(args ...[]interface{}) []interface{} {
 //		}
 func (j *Json) MustMap(args ...map[string]interface{}) map[string]interface{} {
 	var def map[string]interface{}
+
 	switch len(args) {
 	case 0:
-		break
 	case 1:
 		def = args[0]
 	default:
@@ -264,7 +230,6 @@ func (j *Json) MustString(args ...string) string {
 
 	switch len(args) {
 	case 0:
-		break
 	case 1:
 		def = args[0]
 	default:
@@ -288,7 +253,6 @@ func (j *Json) MustInt(args ...int) int {
 
 	switch len(args) {
 	case 0:
-		break
 	case 1:
 		def = args[0]
 	default:
@@ -312,27 +276,52 @@ func (j *Json) MustFloat64(args ...float64) float64 {
 
 	switch len(args) {
 	case 0:
-		break
 	case 1:
 		def = args[0]
 	default:
 		log.Panicf("MustFloat64() received too many arguments %d", len(args))
 	}
 
-	i, err := j.Float64()
+	f, err := j.Float64()
 	if err == nil {
-		return i
+		return f
 	}
 
 	return def
 }
 
+// MustBool guarantees the return of a `bool` (with optional default)
+//
+// useful when you explicitly want a `bool` in a single value return context:
+//     myFunc(js.Get("param1").MustBool(), js.Get("optional_param").MustBool(true))
+func (j *Json) MustBool(args ...bool) bool {
+	var def bool
+
+	switch len(args) {
+	case 0:
+	case 1:
+		def = args[0]
+	default:
+		log.Panicf("MustBool() received too many arguments %d", len(args))
+	}
+
+	b, err := j.Bool()
+	if err == nil {
+		return b
+	}
+
+	return def
+}
+
+// MustInt64 guarantees the return of an `int64` (with optional default)
+//
+// useful when you explicitly want an `int64` in a single value return context:
+//     myFunc(js.Get("param1").MustInt64(), js.Get("optional_param").MustInt64(5150))
 func (j *Json) MustInt64(args ...int64) int64 {
 	var def int64
 
 	switch len(args) {
 	case 0:
-		break
 	case 1:
 		def = args[0]
 	default:
